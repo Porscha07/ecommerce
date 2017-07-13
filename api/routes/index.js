@@ -41,20 +41,43 @@ router.post('/register',(req,res)=>{
 	const password = bcrpyt.hashSync(req.body.password);
 	const city = req.body.city;
 	const state = req.body.state;
-	var insertQuery ="INSERT INTO users (type,password) VALUES (?,?)";
-	connection.query(insertQuery,[accountType,password],(error,results)=>{
-		if(error){
-			res.json({
-				msg: error
-			})
-		}else{
-			res.json({
-				msg: 'userInserted'
-			})
-		}
-		
+	const salesRep = req.body.salesRep;
+	var creditLimit = 16000000
+	//we want to insert the user into two tables( customers and users)
+	//users need the customernumber from the customer table
+	//therefore we need to insert the user into customers first...
+	//get the ID created by that insert, THEN insert the users into Users...
+	//customers insert query
+	var insertIntoCust = "INSERT INTO customers (customerName,city,state,creditLimit,salesRepEmployeeNumber) VALUES (?,?,?,?,?)";
+	//rul the query(for now autoset the sales rep to 1337)
+	connection.query(insertIntoCust,[name,city,state,creditLimit,1337],(error,results)=>{
+		console.log(results);
+	//get the ID that was used in the customer insert.
+		const newId = results.insertId;
+		console.log(results)
+		//get the current time stamp
+		var currTimeStamp = Date.now() / 1000;
+		//set up a token for this user. we will give this back to React.
+		var token = randToken.uid(40);
+			//user insert query
+		var insertQuery ="INSERT INTO users (uid,type,password,created,token) VALUES (?,?,?,?,?)";
+		//run the query. Use error2 and results 2 because you already used error and results.
+		connection.query(insertQuery,[newId,accountType,password,currTimeStamp,token],(error2,results2)=>{
+		 			if(error){
+				res.json({
+					msg: error2
+				})
+			}else{
+				res.json({
+					msg: 'userInserted',
+					token: token
+				})
+			}
+			
+		})
 	})
-
 })
+
+
 
 module.exports = router;

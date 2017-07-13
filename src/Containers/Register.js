@@ -21,13 +21,15 @@ class Register extends Component{
 		var password = event.target[3].value
 		var city = event.target[4].value
 		var state = event.target[5].value
+		var salesRep = event.target[6].value
 		// console.log(name);
 		this.props.registerAction({
 			name: name,
 			accountType: accountType,
 			password: password,
 			city: city,
-			state: state
+			state: state,
+			salesRep: salesRep
 		});
 	}
 	render (){
@@ -80,6 +82,14 @@ class Register extends Component{
 								</Col>
 								<Col sm={10}>
 									<FormControl type="text" name="state" placeholder="state" />
+								</Col>
+							</FormGroup>
+							<FormGroup controlId="formHorizontalName">
+								<Col componentClass={ControlLabel} sm={2}>
+								Sales Rep
+								</Col>
+								<Col sm={10}>
+									<FormControl type="text" name="employee" placeholder="Employee you worked with" />
 								</Col>
 							</FormGroup>
 							<FormGroup controlId="formHorizontalName">
