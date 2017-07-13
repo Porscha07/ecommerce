@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 var mysql = require('mysql');
 //include config file. go up from routes and down into config.
-var config = require('../config/config');
+var config = require('../Config/config');
 //set up the connection with options.
 var connection = mysql.createConnection({
 	host:config.host,
