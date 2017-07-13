@@ -3,6 +3,10 @@ var router = express.Router();
 var mysql = require('mysql');
 //include config file. go up from routes and down into config.
 var config = require('../Config/config');
+//include bycrypt for hashing and checking password
+var bcrpyt =require('bcrypt-nodejs')
+//include  randToken for....(see GH)
+var randToken = require('rand-token')
 //set up the connection with options.
 var connection = mysql.createConnection({
 	host:config.host,
@@ -27,6 +31,30 @@ router.get('/productlines/get',(req,res)=>{
 			res.json(results);
 		}
 	})
+})
+
+/* GET Register page */
+router.post('/register',(req,res)=>{
+	const name = req.body.name;
+	const email = req.body.email;
+	const accountType ='customer';
+	const password = bcrpyt.hashSync(req.body.password);
+	const city = req.body.city;
+	const state = req.body.state;
+	var insertQuery ="INSERT INTO users (type,password) VALUES (?,?)";
+	connection.query(insertQuery,[accountType,password],(error,results)=>{
+		if(error){
+			res.json({
+				msg: error
+			})
+		}else{
+			res.json({
+				msg: 'userInserted'
+			})
+		}
+		
+	})
+
 })
 
 module.exports = router;

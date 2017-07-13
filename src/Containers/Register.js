@@ -1,11 +1,39 @@
 import React, {Component} from 'react';
 import {Form, FormGroup, ControlLabel, FormControl, Button, Col } from 'react-bootstrap';
+// our action needs bindacttioncreators from redux
+import {bindActionCreators} from 'redux';
+//get the registerAction function which runs on submission
+import RegisterAction from  '../actions/RegisterAction';
+//because this is a container we need connect from react-redux
+import {connect} from 'react-redux';
 
 class Register extends Component{
+	constructor(props) {
+		super(props);
+		this.handleRegistration = this.handleRegistration.bind(this);
+	}
+	handleRegistration(event){
+		event.preventDefault();
+		console.log("User submitted the form")
+		var name = event.target[0].value
+		var email = event.target[1].value
+		var accountType ="customer"
+		var password = event.target[3].value
+		var city = event.target[4].value
+		var state = event.target[5].value
+		// console.log(name);
+		this.props.registerAction({
+			name: name,
+			accountType: accountType,
+			password: password,
+			city: city,
+			state: state
+		});
+	}
 	render (){
 		return(
 			<div className="register-wrapper">
-				<Form horizontal>
+				<Form horizontal onSubmit={this.handleRegistration}>
 					<FormGroup controlId="formHorizontalName">
 						<Col componentClass={ControlLabel} sm={2}>
 						Name
@@ -14,59 +42,66 @@ class Register extends Component{
 							<FormControl type="text" placeholder="Full-Name" />
 						</Col>
 					</FormGroup>
+					<FormGroup controlId="formHorizontalName">
+						<Col componentClass={ControlLabel} sm={2}>
+							Email
+						</Col>
+						<Col sm={10}>
+							<FormControl type="text" placeholder="Email" />
+						</Col>
+					</FormGroup>
+					<FormGroup controlId="formHorizontalName">
+						<Col componentClass={ControlLabel} sm={2}>
+							Account Type
+						</Col>
+						<Col sm={10}>
+							<FormControl type="select" name="type" value="customer" disabled/>
+						</Col>
+					</FormGroup>
+					<FormGroup controlId="formHorizontalName">
+						<Col componentClass={ControlLabel} sm={2}>
+						Password
+						</Col>
+						<Col sm={10}>
+							<FormControl type="pasword" name="password" placeholder="password" />
+						</Col>
+					</FormGroup>
 						<FormGroup controlId="formHorizontalName">
 							<Col componentClass={ControlLabel} sm={2}>
-							Email
+							City
 							</Col>
-								<Col sm={10}>
-									<FormControl type="text" placeholder="Email" />
+							<Col sm={10}>
+								<FormControl type="text" name="city" placeholder="city" />
+							</Col>
+					</FormGroup>
+							<FormGroup controlId="formHorizontalName">
+								<Col componentClass={ControlLabel} sm={2}>
+								State
 								</Col>
-						</FormGroup>
-									<FormGroup controlId="formHorizontalName">
-										<Col componentClass={ControlLabel} sm={2}>
-											Account Type
-										</Col>
-										<Col sm={10}>
-											<FormControl type="select" name="type" value="customer" disabled/>
-										</Col>
-									</FormGroup>
-										<FormGroup controlId="formHorizontalName">
-											<Col componentClass={ControlLabel} sm={2}>
-											Password
-											</Col>
-												<Col sm={10}>
-													<FormControl type="pasword" name="password" placeholder="password" />
-												</Col>
-											</FormGroup>
-												<FormGroup controlId="formHorizontalName">
-													<Col componentClass={ControlLabel} sm={2}>
-														City
-													</Col>
-														<Col sm={10}>
-															<FormControl type="text" name="city" placeholder="city" />
-														</Col>
-												</FormGroup>
-													<FormGroup controlId="formHorizontalName">
-														<Col componentClass={ControlLabel} sm={2}>
-														State
-														</Col>
-														<Col sm={10}>
-															<FormControl type="text" name="state" placeholder="state" />
-														</Col>
-												</FormGroup>
-														<FormGroup controlId="formHorizontalName">
-															<Col smOffset={2}sm={10}>
-																<Button bsStyle="primary" bsSize="small" type="submit" >
-																Register
-																</Button>
-															</Col>
-														</FormGroup>
-				<h1>RegisterPage</h1>
+								<Col sm={10}>
+									<FormControl type="text" name="state" placeholder="state" />
+								</Col>
+							</FormGroup>
+							<FormGroup controlId="formHorizontalName">
+								<Col smOffset={2}sm={10}>
+									<Button bsStyle="primary" bsSize="small" type="submit" >
+									Register
+									</Button>
+								</Col>
+							</FormGroup>
+				
 				</Form>
 			</div>
 		)
 	}
 }
 
-export default Register;
+function mapDispatchToProps(dispatch){
+	return bindActionCreators({
+		registerAction: RegisterAction
+	}, dispatch)
+}
+	
+// export default Register;
+export default connect(null,mapDispatchToProps)(Register);
 
