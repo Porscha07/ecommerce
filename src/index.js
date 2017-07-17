@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 // import Home from './Containers/Home';
 import './index.css';
 import App from './App';
-import Home from './Containers/Home'
 //go get the createStore method from the redux module
 import { createStore, applyMiddleware} from 'redux';
 //import the Provider from react-redux so react and redux can talk.

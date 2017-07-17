@@ -1,15 +1,37 @@
 import React, {Component} from 'react';
+import $ from 'jquery';
+import {Link} from 'react-router-dom';
 
 class Home extends Component{
+	constructor(props) {
+		super(props);
+		this.state ={
+			productlines :[]
+		}
+		
+	}
+	componentDidMount() {
+		// go get all productlines from the database
+		$.getJSON(window.hostAddress+'/productlines/get',(productlinesData)=>{
+			console.log(productlinesData);
+			this.setState({
+				productlines : productlinesData
+			})
+		})
+	}
 	render (){
-		return(
-			<div id="parent">
-				<div className="container frame-one">
-					<h1>Home</h1>// on ecommerce-app site have the three squares above the scrolling pictures of the products.
-						<div className="square-one">Square One<img className="ferrari" src="./images/ferrari.jpg" /></div> //oils
-						<div className="square-two">Square Two<img className="lamb" src='./images/lamb.jpg' /></div>//butters
-						<div className="square-three">Square Three<img className="chevy-deluxe-coupe" src='./images/chevy-deluxe-coupe.jpg' /></div>//scrubs
+		const plImages = [];
+		//loop through the productlines in the DB.
+		this.state.productlines.map((row,index)=>{
+			plImages.push(
+				<div key={index} className = "col-sm-4 col-md-3 pl-images">
+					<Link to ={`/shop/${row.link}`}><img src={row.image} /></Link>
 				</div>
+			)
+		})
+		return(
+			<div >
+				{plImages}	
 		</div>
 		);
 	};
