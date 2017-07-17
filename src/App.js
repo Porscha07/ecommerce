@@ -6,6 +6,7 @@ import Home from './Containers/Home';
 import Register from './Containers/Register';
 import Login from './Containers/Login';
 import Slick from './Components/Slick';
+import productLine from './Containers/productLine'
 
 
 
@@ -20,6 +21,7 @@ class App extends Component {
 		         		<Route exact path="/" component={Home} />
 		         		<Route exact path="/Register" component={Register} />
                 <Route exact path="/Login" component={Login} />
+                <Route path="/shop/:productLine" component={productLine} />
 		         	</div>
 		    </div>
        </Router>

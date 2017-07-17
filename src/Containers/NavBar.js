@@ -13,7 +13,7 @@ class NavBar extends Component{
 	componentDidMount() {
 		// go get all productlines from the database
 		$.getJSON(window.hostAddress+'/productlines/get',(productlinesData)=>{
-			console.log(productlinesData);
+			// console.log(productlinesData);
 			this.setState({
 				productlines : productlinesData
 			})
