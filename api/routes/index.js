@@ -1,83 +1,147 @@
 var express = require('express');
 var router = express.Router();
 var mysql = require('mysql');
-//include config file. go up from routes and down into config.
-var config = require('../Config/config');
-//include bycrypt for hashing and checking password
-var bcrpyt =require('bcrypt-nodejs')
-//include  randToken for....(see GH)
+// Include config file. Go up from routes, down into config, config.js
+var config = require('../config/config');
+
+// include bcrpyt for hasing and checking password
+var bcrypt = require('bcrypt-nodejs');
+// include rand-token for generating user token
 var randToken = require('rand-token')
-//set up the connection with options.
+
+// set up the connection with options
 var connection = mysql.createConnection({
-	host:config.host,
-	user:config.user,
-	password:config.password,
-	database:config.database
+	host: config.host,
+	user: config.user,
+	password: config.password,
+	database: config.database
 });
-//actually make the connection
+// Actually make the connection
 connection.connect();
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
-});
+// router.get('/:something/:something2',(req,res, next)=>{
+// 	req.cookies.url = req.body.param.something
+// 	next()
+// })
 
-router.get('/productlines/get',(req,res)=>{
-	const selectQuery ="SELECT * FROM productlines"
-	connection.query(selectQuery,(error,results,fields)=>{
+router.get('/productlines/get', (req, res)=>{
+	const selectQuery = "SELECT * FROM productlines"
+	connection.query(selectQuery,(error, results, fields)=>{
 		if(error){
 			res.json(error)
 		}else{
 			res.json(results);
 		}
-	})
-})
+	});
+});
 
-/* GET Register page */
-router.post('/register',(req,res)=>{
+router.post('/register', (req, res)=>{
+	console.log(req.body)
+
 	const name = req.body.name;
 	const email = req.body.email;
-	const accountType ='customer';
-	const password = bcrpyt.hashSync(req.body.password);
+	const accountType = 'customer';
+	const password = bcrypt.hashSync(req.body.password);
 	const city = req.body.city;
 	const state = req.body.state;
-	const salesRep = req.body.salesRep;
-	var creditLimit = 16000000
-	//we want to insert the user into two tables( customers and users)
-	//users need the customernumber from the customer table
-	//therefore we need to insert the user into customers first...
-	//get the ID created by that insert, THEN insert the users into Users...
-	//customers insert query
-	var insertIntoCust = "INSERT INTO customers (customerName,city,state,creditLimit,salesRepEmployeeNumber) VALUES (?,?,?,?,?)";
-	//rul the query(for now autoset the sales rep to 1337)
-	connection.query(insertIntoCust,[name,city,state,creditLimit,1337],(error,results)=>{
-		console.log(results);
-	//get the ID that was used in the customer insert.
-		const newId = results.insertId;
-		console.log(results)
-		//get the current time stamp
-		var currTimeStamp = Date.now() / 1000;
-		//set up a token for this user. we will give this back to React.
-		var token = randToken.uid(40);
-			//user insert query
-		var insertQuery ="INSERT INTO users (uid,type,password,created,token) VALUES (?,?,?,?,?)";
-		//run the query. Use error2 and results 2 because you already used error and results.
-		connection.query(insertQuery,[newId,accountType,password,currTimeStamp,token],(error2,results2)=>{
-		 			if(error){
-				res.json({
-					msg: error2
-				})
+	const salesRep = req.body.salesRep
+	const creditLimit = 16000000
+
+	// We want to insert the user into 2 tables: Customers and Users.
+	// Users needs the customerNumber from the Customers table.
+	// Therefore, we need to insert the user into Customers first...
+	// get the ID created by that insert, THEN insert the user into Users.
+
+// First, check to see if email already exists
+	const checkEmail = new Promise((resolve, reject) => {
+		const checkEmailQuery = "SELECT * FROM users WHERE email = ?";
+		connection.query(checkEmailQuery,[email],(error,results)=>{
+			if(error) throw error;
+			if(results.length > 0){
+				reject({msg: "userAlreadyExists"});
 			}else{
-				res.json({
-					msg: 'userInserted',
-					token: token
-				})
+				// we dont care about results. Just that there isn't a match
+				resolve();
 			}
-			
 		})
 	})
+
+	checkEmail.then(
+		// Customers insert query
+		()=>{
+			var insertIntoCust = "INSERT INTO customers (customerName, city, state, salesRepEmployeeNumber, creditLimit) VALUES (?,?,?,?,?)"
+			// Run the query (for now autoset the sales rep to 1337)
+			connection.query(insertIntoCust,[name,city,state,1337,creditLimit],(error, results)=>{
+				// Get the ID that was used in the customers insert
+				const newID = results.insertId
+				// Get the current timestamp
+				var currTimeStamp = parseInt(Date.now() / 1000);
+				// Set up a token for this user. We will give this back to React
+				var token = randToken.uid(40);
+				// Users insert query
+				var insertQuery = "INSERT INTO users (uid,type,password,created,token,email) VALUES (?,?,?,?,?,?)";
+				// Run the query. Use error2 and results2 because are already used results and error
+				
+				connection.query(insertQuery,[newID, accountType,password, currTimeStamp, token, email],(error2,results2)=>{
+					if(error2){
+						res.json({
+							msg: error2
+						})
+					}else{
+						res.json({
+							msg: "userInserted",
+							token: token,
+							name: name
+						});
+					}
+				});
+			})
+		}
+	).catch(
+		(error)=>{
+			res.json(error)
+		}
+	)
+
+})	
+
+router.post('/login', (req, res)=>{
+	var email = req.body.email;
+	var password = req.body.password;
+	var checkLoginQuery = "SELECT * FROM users WHERE email = ?";
+	connection.query(checkLoginQuery, [email], (error,results)=>{
+		if(error) throw error;
+		if(results.length === 0){
+			// This email aint in the database
+			res.json({
+				msg: 'badUserName'
+			});
+		}else{
+			// The username is valid. See if the password is...
+			var checkHash = bcrypt.compareSync(password, results[0].password);
+			// checkHash will be true or false.
+			if(checkHash){
+				// this is teh droid we're looking for
+				// Log them in... i.e, create a token, update it, send it back
+				const updateToken = `Update users SET token=?, token_exp=DATE_ADD(NOW(), INTERVAL 1 HOUR)`
+				var token = randToken.uid(40);
+				connection.query(updateToken,[token],(error2,results2)=>{
+					res.json({
+						msg: 'loginSuccess',
+						name: results[0].name,
+						token: token
+					})
+				})
+			}else{
+				// These arent the droids were looking for.
+				// You don't want to sell me death sticks.
+				// You want to go home and rethink your life. Goodbye
+				res.json({
+					msg: 'wrongPassword'
+				})
+			}
+		}
+	})
 })
-
-
 
 module.exports = router;
